@@ -1,4 +1,7 @@
 defmodule Vec3 do
+    alias Vec3, as: Color
+    alias Vec3, as: Point3
+
     @type vec3 :: {float, float, float}
 
     @spec x(vec3) :: vec3
@@ -31,15 +34,18 @@ defmodule Vec3 do
         {elem(a, 0) - elem(b, 0), elem(a, 1) - elem(b, 1), elem(a, 2) - elem(b, 2)}
     end
 
-    @spec mult(vec3, float) :: vec3
-    def mult(a, b) do
+    @spec mult(vec3 | float, float | vec3) :: vec3
+    def mult(a, b) when is_float(b) do
         {elem(a, 0) * b, elem(a, 1) * b, elem(a, 2) * b}
     end
 
-    # @spec mult(vec3, vec3) :: vec3
-    # def mult(a, b) do
-    #     {elem(a, 0) * elem(b, 0), elem(a, 1) * elem(b, 1), elem(a, 2) * elem(b, 2)}
-    # end
+    def mult(a, b) when is_float(a) do
+        Vec3.mult(b, a)
+    end
+
+    def mult(a, b) do
+        {elem(a, 0) * elem(b, 0), elem(a, 1) * elem(b, 1), elem(a, 2) * elem(b, 2)}
+    end
 
     @spec div(vec3, float) :: vec3
     def div(a, b) do
