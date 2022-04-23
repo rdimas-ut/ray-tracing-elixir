@@ -1,8 +1,7 @@
 defmodule Vec3 do
-    alias Vec3, as: Color
-    alias Vec3, as: Point3
-
     @type vec3 :: {float, float, float}
+    @type point3 :: vec3
+    @type color :: vec3
 
     @spec x(vec3) :: vec3
     def x(a) do
@@ -86,13 +85,41 @@ defmodule Color do
     end
 end
 
+defmodule Ray do
+    defstruct orig: {0.0, 0.0, 0.0}, direction: {0.0, 0.0, 0.0}
+
+    @type t :: %__MODULE__{
+        orig: Vec3.point3,
+        direction: Vec3.vec3
+    }
+end
+
 defmodule Main do
+    @spec ray_color(Ray.t()) :: Vec3.color
+    def ray_color(r) do
+        unit_direction = Vec3.unit_vector(r.direction)
+        t = 0.5 * (Vec3.y(unit_direction) + 1.0)
+        Vec3.mult(1.0 - t, {1.0, 1.0, 1.0}) |> Vec3.add(Vec3.mult(t, {0.5, 0.7, 1.0}))
+    end
+
     def main() do
 
         # Image
+        aspect_ratio = 16.0 / 9.0
+        image_width = 400
+        image_height = trunc(image_width / aspect_ratio)
 
-        image_width = 256
-        image_height = 256
+        # Camera
+        viewport_height = 2.0;
+        viewport_width = aspect_ratio * viewport_height;
+        focal_length = 1.0;
+
+        origin = {0.0, 0.0, 0.0};
+        horizontal = {viewport_width, 0.0, 0.0};
+        vertical = {0.0, viewport_height, 0.0};
+
+        # lower_left_corner = origin - horizontal/2 - vertical/2 - vec3(0, 0, focal_length);
+        lower_left_corner = origin |> Vec3.sub(Vec3.div(horizontal, 2.0)) |> Vec3.sub(Vec3.div(vertical, 2.0)) |> Vec3.sub({0.0, 0.0, focal_length})
 
         # Render
 
@@ -101,8 +128,12 @@ defmodule Main do
         for j <- Enum.reverse(0..image_height-1) do
             IO.puts(:stderr, "\rScanlines remaining: #{j}")
             for i <- 0..image_width-1 do
-                pixel_color = {i / (image_width - 1), j / (image_height - 1), 0.25};
-                Color.write_color(pixel_color);
+                u = i / (image_width - 1)
+                v = j / (image_height - 1)
+                r = %Ray{orig: origin, direction: lower_left_corner |> Vec3.add(Vec3.mult(u, horizontal)) |> Vec3.add(Vec3.mult(v, vertical)) |> Vec3.sub(origin)}
+                ray_color(r) |> Color.write_color()
+                #pixel_color = {i / (image_width - 1), j / (image_height - 1), 0.25};
+                # Color.write_color(pixel_color);
             end
         end
 
